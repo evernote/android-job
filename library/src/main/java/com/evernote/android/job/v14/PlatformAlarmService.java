@@ -52,7 +52,7 @@ public final class PlatformAlarmService extends SafeJobIntentService {
         runJob(intent, this, CAT);
     }
 
-    /*package*/ static void runJob(@Nullable Intent intent, @NonNull Service service, @NonNull JobCat cat) {
+    /*package*/ static void runJob(@Nullable Intent intent, @NonNull Context context, @NonNull JobCat cat) {
         if (intent == null) {
             cat.i("Delivered intent is null");
             return;
@@ -60,7 +60,7 @@ public final class PlatformAlarmService extends SafeJobIntentService {
 
         int jobId = intent.getIntExtra(PlatformAlarmReceiver.EXTRA_JOB_ID, -1);
         Bundle transientExtras = intent.getBundleExtra(PlatformAlarmReceiver.EXTRA_TRANSIENT_EXTRAS);
-        final JobProxy.Common common = new JobProxy.Common(service, cat, jobId);
+        final JobProxy.Common common = new JobProxy.Common(context, cat, jobId);
 
         // create the JobManager. Seeing sometimes exceptions, that it wasn't created, yet.
         final JobRequest request = common.getPendingRequest(true, true);

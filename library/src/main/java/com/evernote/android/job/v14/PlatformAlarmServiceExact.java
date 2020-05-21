@@ -23,8 +23,9 @@ import android.os.IBinder;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
+import com.evernote.android.job.WakeLockUtil;
 import com.evernote.android.job.JobConfig;
-import com.evernote.android.job.JobProxy;
+import com.evernote.android.job.JobRequest;
 import com.evernote.android.job.util.JobCat;
 
 import java.util.HashSet;
@@ -45,6 +46,29 @@ public final class PlatformAlarmServiceExact extends Service {
             intent.putExtra(PlatformAlarmReceiver.EXTRA_TRANSIENT_EXTRAS, transientExtras);
         }
         return intent;
+    }
+
+    /**
+     * This is used for Android 7.0+ where the Service start might be restricted either by
+     * a power user that changed the AppOps setting or by the OS itself. If this case
+     * happens, we will run the job directly on an executor instead of using a Service.
+     *
+     * Note that for Android 7.0+, this Service is still used for immediate jobs and exact jobs.
+     *
+     * @see JobRequest#getJobApi
+     */
+    public static void runJobWithoutUsingService(final Context context, final Intent intent) {
+        JobConfig.getExecutorService().execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    PlatformAlarmService.runJob(intent, context, CAT);
+                } finally {
+                    // call here, our own wake lock could be acquired too late
+                    WakeLockUtil.completeWakefulIntent(intent);
+                }
+            }
+        });
     }
 
     private final Object mMonitor = new Object();
@@ -72,7 +96,7 @@ public final class PlatformAlarmServiceExact extends Service {
                     PlatformAlarmService.runJob(intent, PlatformAlarmServiceExact.this, CAT);
                 } finally {
                     // call here, our own wake lock could be acquired too late
-                    JobProxy.Common.completeWakefulIntent(intent);
+                    WakeLockUtil.completeWakefulIntent(intent);
                     stopSelfIfNecessary(startId);
                 }
             }

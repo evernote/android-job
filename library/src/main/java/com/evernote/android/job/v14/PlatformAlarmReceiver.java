@@ -22,7 +22,7 @@ import android.os.Bundle;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
-import com.evernote.android.job.JobProxy;
+import com.evernote.android.job.WakeLockUtil;
 
 /**
  * @author rwondratschek
@@ -50,7 +50,7 @@ public class PlatformAlarmReceiver extends BroadcastReceiver {
 
             if (intent.getBooleanExtra(EXTRA_JOB_EXACT, false)) {
                 Intent serviceIntent = PlatformAlarmServiceExact.createIntent(context, jobId, transientExtras);
-                JobProxy.Common.startWakefulService(context, serviceIntent);
+                WakeLockUtil.startWakefulPlatformAlarmServiceExact(context, serviceIntent);
             } else {
                 PlatformAlarmService.start(context, jobId, transientExtras);
             }
